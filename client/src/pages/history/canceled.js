@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import HistoryAccordion from '../../components/historyAccordion'
 import HistoryModal from '../../components/historyModal'
 import PaginationComp from '../../components/pagination'
-const perPage = 5
+const perPage = 10
 
 export default function Canceled() {
     const { id_user } = useSelector(state => state.user)

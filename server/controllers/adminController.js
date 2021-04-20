@@ -167,13 +167,14 @@ module.exports = {
             res.status(400).send(error.message || error.sqlMessage || error)
         }
     },
-    getAllOrder: async ({ params: { id_order_status }, query: { page = 0, perPage = 5, orderBy } }, res) => {
-        console.log(page, 'ini', perPage)
+    getAllOrder: async ({ params: { id_order_status }, query: { page = 0, perPage = 5, orderBy,search } }, res) => {
         try {
             const orderByOption = {
                 latest: 'o.date DESC',
                 oldest: 'o.date ASC',
             }
+            let bySearch = ''
+            if(search)bySearch=` where o.id_order regexp '${search}' or u.username regexp'${search}' `
             const query = `
                         SELECT
                             *
@@ -193,6 +194,7 @@ module.exports = {
                             product_images pi ON pi.id_product = od.id_product
                                 JOIN
                             order_status os ON os.id_order_status = o.id_order_status
+                            ${bySearch} 
                         GROUP BY id_order_detail
                         ORDER BY ${orderByOption[orderBy] || orderByOption.latest}
         `
@@ -234,7 +236,6 @@ module.exports = {
                         order_details: [],
                         total: shipment_fee
                     })
-                    console.log(a, arr)
                     arr.forEach(da => {
                         const { price, name, image, qty, id_order } = da;
                         if (b.id_order === id_order) {
@@ -245,7 +246,6 @@ module.exports = {
                 }
                 return a
             }, [])
-            console.log(dataThatWeSend)
             res.status(200).send(dataThatWeSend)
         } catch (error) {
             res.status(400).send(error)
@@ -394,6 +394,32 @@ module.exports = {
         } catch (error) {
             console.log(error)
             res.status(400).send(error)
+        }
+    },
+    deleteStore: async (req, res) => {
+        try {
+            const query = [
+            `SELECT
+                total - stock total, s.id_product,purchased_stock
+            FROM
+                storages s
+                    JOIN
+                (SELECT
+                    id_product, SUM(stock - purchased_stock) total
+                FROM
+                    storages
+                GROUP BY id_product) ss ON s.id_product = ss.id_product
+            WHERE
+                id_store = ?
+            HAVING total < 0 or purchased_stock>0`,
+            'delete from stores where id_store=?'
+            ]
+            const isItSaveToDelete = await asyncQuery(query[0], [req.params.id_store])
+            if (isItSaveToDelete.length) return res.status(400).send('Can not delete store because some order need stock from selected store')
+            await asyncQuery(query[1], [req.params.id_store])
+            res.status(200).send('success')
+        } catch (error) {
+            res.status(400).send('delete store failed')
         }
     }
 }

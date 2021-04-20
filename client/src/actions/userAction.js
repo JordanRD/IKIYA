@@ -1,11 +1,8 @@
-import axios from 'axios';
-
-const api = axios.create({ baseURL: 'http://localhost:2000/user' })
-
+import api from '../httpService';
 
 export const login = ({userData,check}, action) => async (dispatch) => {
     try {
-        const { data: payload } = await api.post('/login', userData)
+        const { data: payload } = await api('/user').post('/login', userData)
         if (check) {
             localStorage.setItem('token', payload.token)
         } else {
@@ -21,7 +18,7 @@ export const login = ({userData,check}, action) => async (dispatch) => {
 }
 export const keepLogin = () => async (dispatch) => {
     try {
-        const { data: payload } = await api.post('/keepLogin', { token: localStorage.token||sessionStorage.token })
+        const { data: payload } = await api('/user').post('/keepLogin')
         console.log(payload)
         dispatch({ type: 'LOG_IN', payload })
     } catch (error) {
@@ -32,10 +29,23 @@ export const keepLogin = () => async (dispatch) => {
 }
 export const logout = () => ({ type: 'LOG_OUT' })
 
+export const checkToken = async (token,action) => {
+    try {
+        await api('/user').post('/checkToken/' + token)
+        action()
+    } catch (error) {
+        const errorMsg = error?.response?.data
+        const messages = {
+            JsonWebTokenError: 'Invalid link',
+            TokenExpiredError:'Expired link'
+        }
+        action(messages[errorMsg]||'Some error occurred please try again later')
+    }
+}
 
 export const resetRequest = async (userData, cb) => {
     try {
-        const { data } = await api.post('/forgot', userData)
+        const { data } = await api('/user').post('/forgot', userData)
         cb(false, data)
     } catch (error) {
         const errorMessage = error?.response?.data || error
@@ -47,7 +57,7 @@ export const resetRequest = async (userData, cb) => {
 
 export const resetPassword = async (allData, cb) => {
     try {
-        await api.patch('/reset', allData)
+        await api('/user').patch('/reset', allData)
         cb(false)
     } catch (error) {
         const errorMessage = error?.response?.data || error
@@ -58,7 +68,7 @@ export const resetPassword = async (allData, cb) => {
 
 export const postAddress = async (addressData, action) => {
     try {
-        const { data } = await api.post('/addAddress', addressData)
+        const { data } = await api('/user').post('/addAddress', addressData)
         console.log(data)
         action()
     } catch (error) {
@@ -69,7 +79,7 @@ export const postAddress = async (addressData, action) => {
 }
 export const deleteAddress = async (id_address, action) => {
     try {
-        const { data } = await api.delete('/deleteAddress/' + id_address)
+        const { data } = await api('/user').delete('/deleteAddress/' + id_address)
         console.log(data)
         action()
     } catch (error) {
@@ -81,7 +91,7 @@ export const deleteAddress = async (id_address, action) => {
 
 export const registerUser = async (userData, action) => {
     try {
-        await api.post('/register', userData);
+        await api('/user').post('/register', userData);
         action()
     } catch (error) {
         const errorMessage = error?.response?.data || error
@@ -92,7 +102,7 @@ export const registerUser = async (userData, action) => {
 
 export const verifyUser = async (token, action) => {
     try {
-        await api.patch('/verify', { token })
+        await api('/user').patch('/verify', { token })
         action()
     } catch (error) {
         const errorMessage = error?.response?.data || error
@@ -103,7 +113,7 @@ export const verifyUser = async (token, action) => {
 
 export const sendVerificationEmail = async (username, action) => {
     try {
-        const {data }=await api.post('/resend',{username})
+        const {data }=await api('/user').post('/resend',{username})
         action(data)
     } catch (error) {
         const errorMessage = error?.response?.data || error
@@ -115,7 +125,7 @@ export const sendVerificationEmail = async (username, action) => {
 
 export const editAddress = async (addressData, action) => {
     try {
-        await api.patch('/editAddress', addressData)
+        await api('/user').patch('/editAddress', addressData)
         action()
     } catch (error) {
         const errorMessage = error?.response?.data || error
@@ -127,7 +137,7 @@ export const editAddress = async (addressData, action) => {
 
 export const uploadProfilePicture = async (formData, action) => {
     try {
-        await api.post('/uploadProfilePicture', formData)
+        await api('/user').post('/uploadProfilePicture', formData)
     } catch (error) {
         const errorMessage = error?.response?.data || error
         console.log(errorMessage)
@@ -138,7 +148,7 @@ export const uploadProfilePicture = async (formData, action) => {
 
 export const deleteProfilePicture = async (id_user, action) => {
     try {
-        await api.delete('/deleteProfilePicture/' + id_user)
+        await api('/user').delete('/deleteProfilePicture/' + id_user)
     } catch (error) {
         const errorMessage = error?.response?.data || error
         console.log(errorMessage)

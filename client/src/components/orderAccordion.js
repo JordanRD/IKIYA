@@ -3,12 +3,15 @@ import { Card, Accordion, Button } from 'react-bootstrap'
 export default function OrderAccordion({ item, index, showModal, handleCancel, handleDelivery }) {
     return (
         <div>
-            <Accordion defaultActiveKey={index + ''} >
+            <Accordion >
                 <Card>
                     <Card.Header style={{ display: 'flex', gap: '20px', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Accordion.Toggle as={Button} variant="outline-dark" eventKey={index + ''}>
-                            <i className="far fa-caret-square-down"></i>
-                        </Accordion.Toggle>
+                        <div style={{display: 'flex',gap:'10px',alignItems:'center'}}>
+                            <Accordion.Toggle as={Button} variant="outline-dark" eventKey={index + ''}>
+                                <i className="far fa-caret-square-down"></i>
+                            </Accordion.Toggle>
+                            <span style={{ fontWeight: '500' }}>ORDER NO : {item.id_order}</span>
+                        </div>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexDirection: 'row-reverse' }}>
                             {
                                 (item.id_order_status === 2 || item.id_order_status === 3) &&

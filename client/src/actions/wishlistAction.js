@@ -1,11 +1,10 @@
-import axios from 'axios';
+import api from '../httpService';
 
-const api = axios.create({ baseURL: 'http://localhost:2000/wishlist' })
 
 
 export const addWishlist = async (wishlistData, action) => {
     try {
-        await api.post(`/add`, wishlistData)
+        await api('/wishlist').post(`/add`, wishlistData)
         action()
     } catch (error) {
         console.log(error.response?.data || error)
@@ -14,7 +13,7 @@ export const addWishlist = async (wishlistData, action) => {
 }
 export const deleteWishlist = async (wishlistData, action) => {
     try {
-        await api.delete(`/delete`, {params:wishlistData})
+        await api('/wishlist').delete(`/delete`, {params:wishlistData})
         action()
     } catch (error) {
         console.log(error.response?.data || error)

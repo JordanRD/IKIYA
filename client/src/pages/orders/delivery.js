@@ -3,7 +3,7 @@ import { getOrder, completeOrder } from '../../actions'
 import OrderAccordion from '../../components/orderAccordion'
 import ConfirmationModal from '../../components/confirmationModal'
 import PaginationComp from '../../components/pagination'
-const perPage = 5
+const perPage = 10
 
 export default function Delivery() {
     const [deliveryProduct, setDeliveryProduct] = useState([])
@@ -12,11 +12,12 @@ export default function Delivery() {
     const [show, setShow] = useState(false)
     const [page, setPage] = useState(0)
     const [orderBy, setOrderBy] = useState('latest')
+    const [search, setSearch] = useState('')
 
     useEffect(() => {
-        getOrder({ id_order_status: 4, page, perPage, orderBy }, data => setDeliveryProduct(data))
+        getOrder({ id_order_status: 4, page, search, perPage, orderBy }, data => setDeliveryProduct(data))
         
-    }, [refresh, page, orderBy])
+    }, [refresh, page, search, orderBy])
 
     const handleSubmit = () => {
     // alert(arrivedProduct)
@@ -25,14 +26,9 @@ export default function Delivery() {
     }
 
 
-    if (!deliveryProduct.length) return (
-        <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
-            <h2>Empty</h2>
-        </div>
-    )
 
     return (
-        <PaginationComp page={page} perPage={perPage} setPage={setPage} length={deliveryProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
+        <PaginationComp search={search} setSearch={setSearch} page={page} perPage={perPage} setPage={setPage} length={deliveryProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 40px 40px 40px' }}>
             {deliveryProduct.map((item, index) => <OrderAccordion item={item} key={index} showModal={() => {
                 setArrivedProduct(item.id_order)

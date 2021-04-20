@@ -1,11 +1,9 @@
-import axios from 'axios';
-
-const api = axios.create({ baseURL: 'http://localhost:2000/cart' })
+import api from '../httpService';
 
 
 export const addToCart = async (data, action) => {
     try {
-        await api.post(`/add`, data)
+        await api('/cart').post(`/add`, data)
         action()
     } catch (error) {
         console.log(error.response?.data)
@@ -14,7 +12,7 @@ export const addToCart = async (data, action) => {
 
 export const editCart = async(editedData, action) => {
     try {
-        await api.patch(`/edit`, editedData)
+        await api('/cart').patch(`/edit`, editedData)
         action()
     } catch (error) {
         console.log(error.response?.data)

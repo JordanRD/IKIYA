@@ -1,3 +1,16 @@
+
+// const jwt = require('jsonwebtoken')
+
+// let data = { name: 'adi' }
+
+// try {
+//     let token = jwt.verify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRpIiwiaWF0IjoxNjE4MTk0MjY1LCJleHAiOjE2MTgxOTQyNjd9.uJHtjleg5RwzNObY6_8NLMi7fBiOlrtmeMw8zfvKde4', 'adi', { expiresIn: '2s' })
+// } catch (error) {
+// console.log(error.messages)    
+// }
+// console.log(token)
+
+
 // app.post('/upload', upload(), async ({ files, body }, res) => {
 //     try {
 //         console.log('hai')

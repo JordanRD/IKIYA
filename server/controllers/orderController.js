@@ -110,33 +110,6 @@ module.exports = {
     confirmOrder: async (req, res) => {
         const {id_order}=req.params
         try {
-            // const query = [
-            //     'select id_store,lat,lng lon from stores',
-            //     'select lat,lng lon,username,email from orders o join users u on o.id_user=u.id_user where o.id_order=?',
-            //     'select * from order_details where id_order=?',
-            //     'SELECT id_order_detail, s.id_product, qty, stock, purchased_stock, stock - qty remain FROM storages s JOIN order_details od ON od.id_product = s.id_product WHERE s.id_store = ? and od.id_order = ?',
-            //     'update storages set stock=stock+? where id_store=? and id_product=?',
-            //     'update storages set stock=stock-? where id_store=? and id_product=?',
-            //     'update storages set stock=stock-(purchased_stock-(purchased_stock-?)),purchased_stock=purchased_stock-? where id_store=? and id_product=?',
-            //     'update orders set id_order_status=4 where id_order=?'
-            // ]
-            // const stores = await asyncQuery(query[0])
-            // const [userCords]= await asyncQuery(query[1],id_order)
-            // const userCart= await asyncQuery(query[2],id_order)
-            // const sorted = stores.sort((a, b) => {
-            //     a = geoLocation.getDistanceBetweenLocations(a, userCords)
-            //     b = geoLocation.getDistanceBetweenLocations(b, userCords);
-            //     return a - b
-            // })
-            // const needStock = await asyncQuery(query[3],[sorted[0].id_store,id_order])
-            // for await (let {remain,id_product} of needStock) {
-            //     await asyncQuery(query[4], [remain, sorted[1].id_store, id_product])
-            //     await asyncQuery(query[5], [remain, sorted[0].id_store, id_product])
-            // }
-            // for await (let { qty, id_product } of userCart) {
-            //     await asyncQuery(query[6], [qty,qty,sorted[0].id_store, id_product])
-            // }
-            // await asyncQuery(query[7], [id_order])
             const query = [
                 'select id_store,lat,lng lon from stores',//# 0
                 'select lat,lng lon,username,email from orders o join users u on o.id_user=u.id_user where o.id_order=?',//# 1

@@ -3,7 +3,7 @@ import { getHistory, } from '../../actions'
 import { useSelector } from 'react-redux'
 import HistoryAccordion from '../../components/historyAccordion'
 import PaginationComp from '../../components/pagination'
-const perPage = 5
+const perPage = 10
 
 export default function Completed() {
     const { id_user } = useSelector(state => state.user)

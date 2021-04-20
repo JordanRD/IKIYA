@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect,  } from 'react'
 import { Modal, ListGroup, Form, Button } from 'react-bootstrap'
 import styled from 'styled-components'
-import { getStoreDetails, getStoreProductDetails, addNewStore } from '../../actions'
+import { getStoreDetails, getStoreProductDetails, addNewStore,deleteStore } from '../../actions'
 import MapsSelect from '../../components/mapsSelect'
 import PaginationSearch from '../../components/paginationSearch'
 import AlertModal from '../../components/alertModal'
@@ -13,9 +13,10 @@ align-items: center;
 background-color:#1a242a;
 height:150px;
 width:150px;
-border-radius:3px;
+border-radius:4px;
 color:white;
 cursor:pointer;
+position:relative;
 transition : all 500ms;
 &:hover{
     transform : scale(1.02) ;
@@ -32,9 +33,11 @@ export default function ManageStore() {
     const [showModal, setShowModal] = useState(false)
     const [showAddStore, setShowAddStore] = useState(false)
     const [alertMessage, setAlertMessage] = useState('')
+    const [refresh,setRefresh] = useState(false)
     useEffect(() => {
+        console.log('refre')
         getStoreDetails({ page, perPage: perPage1, search }, data => setStoreData(data))
-    }, [search, page])
+    }, [search, page,refresh])
     const handleAddStore = (newStoreData) => {
         if (!newStoreData.lng || !newStoreData.lat || !newStoreData.store_name) {
             setAlertMessage('Empty input')
@@ -48,16 +51,36 @@ export default function ManageStore() {
             setSearch(newStoreData.store_name)
         })
     }
+    const handleDelete = ({store_name,id_store}) => {
+        if (window.confirm(`Are you sure you want to delete ${store_name}?`)) {
+            deleteStore(id_store, err => {
+                if (err) return setAlertMessage(err)
+                setRefresh(p => !p)
+                setAlertMessage('Success')
+            })
+        }
+    }
     return (
         <div style={{ display: 'grid', placeItems: 'center', padding: '0 50px 50px 50px' }}>
             <PaginationSearch setPage={setPage} page={page} length={storeData.length} perPage={perPage1} setSearch={setSearch} search={search} />
             <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {storeData.map(
                     (item, index) =>
-                        <MyDiv onClick={() => {
-                            setShowModal(true)
-                            setSelectedIdStore(item.id_store)
-                        }} key={index}>
+                        <MyDiv
+                            onClick={() => {
+                                setShowModal(true)
+                                setSelectedIdStore(item.id_store)
+                            }} key={index}>
+                            <Button
+                                variant='danger'
+                                onClick={e => {
+                                    e.stopPropagation()
+                                    handleDelete(item)
+                                }}
+                                style={{ position: 'absolute', top: 0, right: 0, borderRadius: '0 4px 0 0' }}
+                            >
+                                <i className='fa fa-trash' />
+                            </Button>
                             <h4>{item.store_name}</h4>
                             <span>{item.total_product} product</span>
                         </MyDiv>
@@ -79,7 +102,7 @@ function ProductModalDetail({ show, setShow, id_store }) {
     const [page, setPage] = useState(0)
     const [productDetail, setProductDetail] = useState([])
     useEffect(() => {
-        if (show) getStoreProductDetails({ search, page, id_store,perPage:perPage2 }, data => setProductDetail(data))
+        if (show) getStoreProductDetails({ search, page, id_store, perPage: perPage2 }, data => setProductDetail(data))
         else {
             setPage(0)
             setSearch('')

@@ -1,26 +1,43 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Button, Form, InputGroup } from 'react-bootstrap'
-import { Redirect, useHistory, useParams } from 'react-router'
-import {  resetPassword } from '../actions/userAction'
-import {useSelector} from'react-redux'
+import { useHistory, useParams } from 'react-router'
+import { resetPassword, resetRequest, checkToken } from '../actions'
+import { useSelector } from 'react-redux'
 import AlertModal from '../components/alertModal'
+import ResetPasswordModal from '../components/resetPasswordModal'
 export default function ForgotPasswordPage() {
-    // const [show, setShow] = useState(true)
+    const [show, setShow] = useState(false)
     const [newUserData, setNewUserData] = useState({ code: '', password: '', confirmPassword: '' })
     const [errorMessage, setErrorMessage] = useState('')
     const [redirect, setRedirect] = useState(false)
     const [alertMessage, setAlertMessage] = useState('')
-    const [visible, setVisible]=useState(false)
-    const { username }=useSelector(state=>state.user)
+    const [showResendButton, setShowResendButton] = useState(false)
+    const [visible, setVisible] = useState(false)
+    const { username } = useSelector(state => state.user)
     const { token } = useParams()
-    const history=useHistory()
+    const history = useHistory()
+    let timeOut = useRef()
+
     useEffect(() => {
-        if(token.length<10) history.replace('/')
-    }, [token.length,history])
+        if (username) return history.replace('/')
+        checkToken(token, err => {
+            if (err) {
+                setAlertMessage(err)
+                setRedirect(true)
+                return
+            }
+            timeOut.current = setTimeout(() => {
+                setShowResendButton(true)
+            }, 10000)
+        })
+        return () => {
+            clearTimeout(timeOut.current)
+        }
+    }, [history, username, token])
 
     const handleModal = () => {
         setAlertMessage('')
-        if(redirect)history.replace('/login')
+        if (redirect) history.replace('/login')
     }
 
     const handleSubmit = () => {
@@ -38,18 +55,25 @@ export default function ForgotPasswordPage() {
         setErrorMessage('')
     }
 
-    if (username) return <Redirect to='/' />
+    const handleUserData = (data, cb) => {
+        resetRequest(data, (err, res) => {
+            if (err) return cb(err)
+            setShowResendButton(false)
+            setShow(false)
+            history.replace('/forgot/' + res)
+        })
+    }
 
     return (
         <>
-            <div style={{ display: 'grid', placeItems: 'center', height: '100vh' }}>
-                
-                    <Form>
-                        <h3 style={{ marginBottom: '30px' }}>We all ready send a <br /> verification code to your email</h3>
-                        <Form.Group controlId="formBasicEmail">
-                            <Form.Label>Verification Code</Form.Label>
-                            <Form.Control value={newUserData.code} onChange={handleChange} name='code' type="text" placeholder="Enter 4 digit code" />
-                        </Form.Group>
+            <div style={{ display: 'grid', placeItems: 'center', height: '80vh' }}>
+
+                <Form>
+                    <h3 style={{ marginBottom: '30px', opacity: showResendButton ? 0 : 1, transition: '100ms' }}>We all ready send a <br /> verification code to your email</h3>
+                    <Form.Group controlId="formBasicEmail">
+                        <Form.Label>Verification Code</Form.Label>
+                        <Form.Control value={newUserData.code} onChange={handleChange} name='code' type="text" placeholder="Enter 4 digit code" />
+                    </Form.Group>
                     <Form.Group controlId="formBasicPassword">
                         <Form.Label>New password</Form.Label>
                         <InputGroup className="mb-3">
@@ -81,18 +105,21 @@ export default function ForgotPasswordPage() {
                             type={visible ? "text" : "password"}
                         />
                     </Form.Group>
-                        <Form.Group>
-                            <Form.Text style={{ color: 'red',maxWidth:'400px' }}>
-                                {errorMessage}
-                            </Form.Text>
-                        </Form.Group>
+                    <Form.Group>
+                        <Form.Text style={{ color: 'red', maxWidth: '400px' }}>
+                            {errorMessage}
+                        </Form.Text>
+                    </Form.Group>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Button variant="primary" onClick={handleSubmit} type="button">Submit</Button>
-                    </Form>
-                
+                        {showResendButton && <span onClick={() => setShow(true)} style={{ color: '#007bff', cursor: 'pointer' }}>Resend Verification Code</span>}
+                    </div>
+                </Form>
+
             </div>
-            <AlertModal message={alertMessage} setShow={handleModal}/>
-            {/* <ResetPasswordModal action={handleUserData} show={show} /> */}
-            </>
+            <AlertModal message={alertMessage} setShow={handleModal} />
+            <ResetPasswordModal action={handleUserData} show={show} handleClose={() => setShow(false)} />
+        </>
     )
 }
 

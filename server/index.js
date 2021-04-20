@@ -16,19 +16,30 @@ db.connect(err => (
 
 const { userRouter, productRouter, cartRouter, orderRouter, historyRouter,adminRouter,wishlistRouter} = require('./routers')
 
+const {adminAuthorization,verifiedUserAuthorization,userAuthorization}=require('./helpers/jwtHelper')
+
 app.use(cors());
 app.use(express.json());
 
 app.use(express.static(__dirname + '/public'))
 
-app.get('/', (_, res) => res.status(200).send('this is home'))
+
 
 app.use('/user', userRouter)
-app.use('/product',productRouter)
-app.use('/cart',cartRouter)
 app.use('/order', orderRouter)
-app.use('/history', historyRouter)
-app.use('/admin', adminRouter)
+app.use('/product', productRouter)
+
+app.use(userAuthorization)
+
 app.use('/wishlist', wishlistRouter)
+
+app.use(verifiedUserAuthorization)
+
+app.use('/history', historyRouter)
+app.use('/cart', cartRouter)
+
+app.use(adminAuthorization)
+
+app.use('/admin', adminRouter)
 
 app.listen(port, () => console.log('connected to port ', port))

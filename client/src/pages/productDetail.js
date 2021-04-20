@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Carousel, Toast } from 'react-bootstrap'
 import { useSelector, useDispatch } from 'react-redux'
-import { useHistory, useParams } from 'react-router'
-import { getProductById, addToCart, keepLogin,addWishlist,deleteWishlist } from '../actions'
+import { useHistory, useParams, } from 'react-router'
+import { getProductById, addToCart, keepLogin, addWishlist, deleteWishlist } from '../actions'
 import ModalAddToCart from '../components/modalAddToCart'
 import AlertModal from '../components/alertModal'
 import { Link } from 'react-router-dom'
@@ -10,7 +10,7 @@ export default function ProductDetail() {
     const { id_product: selectedProduct } = useParams()
     const [product, setProduct] = useState({ images: [], category: '', stock: 0, name: '', description: '', price: 0 })
     const [show, setShow] = useState(false)
-    const { cart, id_user, id_status, username,wishlist } = useSelector(state => state.user)
+    const { cart, id_user, id_status, username, wishlist } = useSelector(state => state.user)
     const [alertMessage, setAlertMessage] = useState('')
     const [toast, setToast] = useState(false)
     const dispatch = useDispatch()
@@ -33,16 +33,17 @@ export default function ProductDetail() {
 
     const handleAddWishlist = () => {
         addWishlist({ id_product: selectedProduct, id_user }, () => {
-            setAlertMessage(name+' just added to wishlist')
+            setAlertMessage(name + ' just added to wishlist')
             dispatch(keepLogin())
         })
     }
     const handleDeleteWishlist = () => {
         deleteWishlist({ id_product: selectedProduct, id_user }, () => {
-            setAlertMessage(name+' has been deleted from wishlist')
+            setAlertMessage(name + ' has been deleted from wishlist')
             dispatch(keepLogin())
         })
     }
+
 
     return (
         <>
@@ -77,7 +78,7 @@ export default function ProductDetail() {
                         {
                             username ?
                                 <div
-                                    style={{ marginTop: '10px' ,display: 'flex',gap:'10px'}}>
+                                    style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
                                     <Button
                                         disabled={stock <= 0}
                                         onClick={() =>
@@ -86,9 +87,12 @@ export default function ProductDetail() {
                                                 setAlertMessage('to add to cart you need to be verified')
                                         }
                                         variant='outline-dark'>Add to Cart</Button>
-                                    {wishlist.some(i => +i.id_product === +selectedProduct) ?
-                                        <Button onClick={handleDeleteWishlist} variant='danger'><i className='fa fa-heart' /></Button>:
-                                        <Button onClick={handleAddWishlist} variant='outline-danger'><i className='fa fa-heart' /></Button>
+                                    {
+                                        id_status !== 2 ?
+                                            <Button disabled variant='danger'><i className='fa fa-heart' /></Button> :
+                                            wishlist.some(i => +i.id_product === +selectedProduct) ?
+                                                <Button onClick={handleDeleteWishlist} variant='danger'><i className='fa fa-heart' /></Button> :
+                                                <Button onClick={handleAddWishlist} variant='outline-danger'><i className='fa fa-heart' /></Button>
                                     }
                                 </div> :
                                 <Button as={Link} to='/login' variant='outline-secondary'>Login</Button>

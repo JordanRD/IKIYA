@@ -75,6 +75,7 @@ export default function App() {
                 <Route path='/login' component={Login} />
                 <Route path='/verify/:token' component={Verification}/>
                 <Route path='/register' component={Register} />
+                <Route path='/detail/:id_product' component={ProductDetail} />
                 <Route path='/forgot/:token' component={ForgotPasswordPage} />
                 <Route path='*' component={NotFound} />
             </Switch>

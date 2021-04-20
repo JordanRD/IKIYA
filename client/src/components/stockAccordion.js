@@ -9,6 +9,7 @@ export default function StockAccordion({ item, index }) {
     const [newStock, setNewStock] = useState(0)
     const [selectedStore, setSelectedStore] = useState({})
     const [alertMessage, setAlertMessage] = useState('')
+    const [search,setSearch]=useState('')
     const dispatch = useDispatch()
     useEffect(() => {
         getStores(stores => setStores(stores.filter(i => storages.every(i2 => i2.id_store !== i.id_store))))
@@ -22,7 +23,7 @@ export default function StockAccordion({ item, index }) {
         })
     }
     return (
-        <Accordion  defaultActiveKey={index+''}>
+        <Accordion  >
             <Card>
                 <Card.Header style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -30,12 +31,13 @@ export default function StockAccordion({ item, index }) {
                         <h4>{name}</h4>
                     </div>
                     <Accordion.Toggle as={Button} variant="dark" eventKey={index+''}>
-                        <i className='fa fa-caret-square-up'/>
+                        <i className='fa fa-caret-square-down'/>
                     </Accordion.Toggle>
                 </Card.Header>
                 <Accordion.Collapse  eventKey={index+''}>
                     <Card.Body >
-                        <Table bordered striped hover>
+                        <Form.Control value={search} onChange={e=>setSearch(e.target.value)} style={{marginBottom:'15px',maxWidth:'30%'}} type='text' placeholder='Search Store'/>
+                        <Table  bordered striped hover>
                             <thead>
                                 <tr>
                                     <th>Store</th>
@@ -44,8 +46,11 @@ export default function StockAccordion({ item, index }) {
                                     <th >Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {storages.map((item, index) => <TableRow setAlertMessage={setAlertMessage}  key={index} index={index} storage={item} minStock={storages.reduce((a,b)=>a+(b.stock-b.purchased_stock),0)} />)}
+                            <tbody >
+                                {storages.map(
+                                    (item, index) =>
+                                        new RegExp(search,'gi').test(item.store_name)&&<TableRow setAlertMessage={setAlertMessage} key={index} index={index} storage={item} minStock={storages.reduce((a, b) => a + (b.stock - b.purchased_stock), 0)} />
+                                )}
                                 {
                                     stores.length>0&&
                                     <tr>
@@ -62,7 +67,7 @@ export default function StockAccordion({ item, index }) {
                                             </Dropdown>
                                         </td>
                                         <td>
-                                            <Form.Control style={{ textAlign: 'center' }} onChange={e => setNewStock(Math.max(+e.target.value, 0))} value={newStock} type="number" placeholder="Stock" min='0' />
+                                            <Form.Control style={{ textAlign: 'center',minWidth:'100px' }} onChange={e => setNewStock(Math.max(+e.target.value, 0))} value={newStock} type="number" placeholder="Stock" min='0' />
                                         </td>
                                         <td></td>
                                         <td style={{ display: 'flex', justifyContent: 'center' }}>

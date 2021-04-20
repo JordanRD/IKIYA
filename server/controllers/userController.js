@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 const transporter = require('../helpers/nodemailerHelper')
 const fs = require('fs')
 const handlebars = require('handlebars')
-const { createToken } = require('../helpers/jwtHelper')
+const { createToken, checkToken} = require('../helpers/jwtHelper')
 
 
 const cartQuery = `SELECT
@@ -87,12 +87,13 @@ module.exports = {
     },
     keepLogin: async ({ user }, res) => {
         try {
+            // console.log(user)
             const query = [
                 'select id_user,username,id_status,id_role,email,profile_picture from users where id_user=? and username=? ',
                 'select * from address where id_user=?',
                 'select * from wishlists w join products p on p.id_product=w.id_product join (select * from product_images group by id_product) pi on pi.id_product=w.id_product where id_user=? '
             ]
-            console.log(user)
+            // console.log('keeplogin',user)
             const [result1] = await asyncQuery(query[0], [user.id_user, user.username])
             // console.log(result1)
             if (!result1) return res.status(400).send('user not found')
@@ -131,7 +132,7 @@ module.exports = {
 
             console.log(code, matchPassword)
 
-            const token = createToken({ username, password: matchPassword })
+            const token = createToken({ username, password: matchPassword },'5m')
             option.html = template({ username, code, link: `http://localhost:3000/forgot/${token}` })
 
             transporter.sendMail(option)
@@ -166,7 +167,7 @@ module.exports = {
 
         } catch (error) {
             console.log(error)
-            res.status(400).send(error.message || error.sqlMessage || error)
+            res.status(400).send(error.message || error.sqlMessage || 'something wrong in our server please try again later')
         }
     },
     editAddress: async (req, res) => {
@@ -253,7 +254,7 @@ module.exports = {
             }
             const file = fs.readFileSync('./templates/userVerification.handlebars').toString()
             const template = handlebars.compile(file)
-            const token = createToken({ username, password })
+            const token = createToken({ username, password },'15m')
             option.html = template({ username, password, link: 'http://localhost:3000/verify/' + token })
             transporter.sendMail(option);
             res.status(200).send('We have sent an email verification please check your email')
@@ -279,5 +280,14 @@ module.exports = {
         } catch (error) {
             res.status(200).send(error.message || error.sqlMessage || error);
         }
+    },
+    checkToken: async (req, res) => {
+        try {
+            checkToken(req.params.token)
+            res.status(200).send('success')
+        } catch (error) {
+            res.status(400).send(error.name)
+        }
     }
 }
+

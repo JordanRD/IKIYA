@@ -4,6 +4,15 @@ import { NavDropdown, Navbar, Nav, Form, } from 'react-bootstrap'
 import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { logout } from '../actions'
+import styled from 'styled-components'
+
+const MyDropdown = styled(NavDropdown)`
+.dropdown-toggle{
+    color:#1a242a;
+    
+}
+`
+
 export default function AdminNavigation() {
     const { username, } = useSelector(state => state.user)
     const dispatch = useDispatch()
@@ -16,8 +25,8 @@ export default function AdminNavigation() {
                     <Nav.Link style={{color:'white'}} as={Link} to='/orders/confirmed' >Orders</Nav.Link>
                     <Nav.Link style={{color:'white'}} as={Link} to='/stock/add' >Stock</Nav.Link>
                 </Nav>
-                <Form inline style={{ marginRight: '80px' }}>
-                    <NavDropdown title={username || "guest"} id="basic-nav-dropdown">
+                <Form inline style={{ display: 'flex', justifyContent: 'space-between', minWidth: '150px', backgroundColor: 'white', borderRadius: '5px',height:'45px', alignItems: 'center' }}>
+                    <MyDropdown title={username || "admin"}  id="basic-nav-dropdown">
                         {
                             username ?
                                 <>
@@ -28,7 +37,7 @@ export default function AdminNavigation() {
                                     <NavDropdown.Item >Register</NavDropdown.Item>
                                 </>
                         }
-                    </NavDropdown>
+                    </MyDropdown>
                 </Form>
             </Navbar.Collapse>
         </Navbar>

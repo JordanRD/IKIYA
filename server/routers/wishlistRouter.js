@@ -1,7 +1,9 @@
 const router = require('express').Router();
 
-const { addWishlist,deleteWishlist } = require('../controllers').wishlistController
+const { addWishlist, deleteWishlist } = require('../controllers').wishlistController
+
+router.delete('/delete', deleteWishlist)
 
 router.post('/add', addWishlist)
-router.delete('/delete', deleteWishlist)
+
 module.exports = router

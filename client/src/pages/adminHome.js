@@ -9,7 +9,7 @@ const perPage = 8
 export default function AdminHome() {
     const [product, setProduct] = useState([])
     const [page, setPage] = useState(0)
-    const [orderBy, setOrderBy] = useState('default')
+    const [orderBy, setOrderBy] = useState('available')
     const [selectedCategory, setSelectedCategory] = useState({})
     const [allCategory, setAllCategory] = useState([])
     const [refresh,setRefresh] = useState(false)
@@ -18,11 +18,13 @@ export default function AdminHome() {
     const [search,setSearch]=useState('')
 
     useEffect(() => {
-        let filtered = { perPage, page, orderBy, search }
-        if (selectedCategory.category) filtered.id_category = selectedCategory.id_category
-        getAllProductAdmin(filtered, data => setProduct(data))
-        getCategories(data => setAllCategory(data))
-    }, [page, username, selectedCategory, orderBy, refresh, search])
+        if (username) {
+            let filtered = { perPage, page, orderBy, search }
+            if (selectedCategory.category) filtered.id_category = selectedCategory.id_category
+            getAllProductAdmin(filtered, data => setProduct(data))
+            getCategories(data => setAllCategory(data))
+        }
+    }, [page, username, selectedCategory, orderBy, refresh, search,])
 
     const handleDelete = selectedProductIdToDelete => {
         deleteProduct(selectedProductIdToDelete,()=>setRefresh(p=>!p))
@@ -67,7 +69,7 @@ export default function AdminHome() {
                         Order by : {orderBy}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
-                        {['nameAsc', 'nameDesc', 'priceAsc', 'priceDesc', 'latest', 'sold','available','notAvailable', 'default'].map(
+                        {['nameAsc', 'nameDesc', 'priceAsc', 'priceDesc', 'latest', 'sold','available','notAvailable'].map(
                             (item, index) =>
                                 <Dropdown.Item key={index} onClick={() => {
                                     setPage(0)

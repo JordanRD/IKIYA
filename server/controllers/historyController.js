@@ -51,7 +51,6 @@ module.exports = {
                         order_details: [],
                         total: shipment_fee
                     })
-                    console.log(a, arr)
                     arr.forEach(da => {
                         const { price, name, image, qty, id_order } = da;
                         if (b.id_order === id_order) {
@@ -62,7 +61,6 @@ module.exports = {
                 }
                 return a
             }, [])
-            console.log(dataThatWeSend)
             res.status(200).send(dataThatWeSend)
         } catch (error) {
             res.status(400).send(error)

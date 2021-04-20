@@ -1,11 +1,15 @@
 import axios from 'axios';
 
-const Api = route => {
+const httpService = route => {
     const token = sessionStorage.token || localStorage.token
-    const customService = axios.create({
-        baseURL: `http://localhost:2000/${route}`,
-        headers: { Authorization: token }
+    
+    let headers= {}
+    if (token) headers = { authorization: token }
+    // console.log(token)
+    return axios.create({
+        baseURL: `http://localhost:2000${route}`,
+        headers
     })
-    return customService;
 }
-export default Api;
+
+export default httpService;
