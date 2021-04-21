@@ -1,24 +1,43 @@
 const jwt = require('jsonwebtoken');
 const { asyncQuery } = require('./queryHelper')
-const key = 'secret'
+const accessTokenKey = 'secret'
+const refreshTokenKey = 'key'
 module.exports = {
-    createToken: (data,expiresIn='30d') => jwt.sign(data, key,{expiresIn}),
+    createToken: (data, expiresIn = '3m') => jwt.sign(data, accessTokenKey, { expiresIn }),
+    createRefreshToken: (data, expiresIn = '7d') => jwt.sign(data, refreshTokenKey, { expiresIn }),
+    getAccessToken: async (req, res) => {
+        try {
+            console.log(req.headers)
+            const { id_user, username } = jwt.verify(req.headers['refresh_token'], refreshTokenKey)
+            console.log(id_user,username)
+            const query = 'select id_user,username from users where id_user=? and username=?'
+            const [result] = await asyncQuery(query, [id_user, username])
+            console.log(result)
+            if (!result) return res.status(401).send('Invalid token')
+            const accessToken = jwt.sign({id_user:result.id_user, username:result.username}, accessTokenKey, { expiresIn: '3m' })
+            console.log(accessToken)
+            res.status(200).send({ token: accessToken})
+        } catch (error) {
+            console.log(error)
+            res.status(401).send(error.name === 'TokenExpiredError' ? 'Link expired' : error.message)
+        }
+    },
     verifyToken: async (request, response, next) => {
         const token = request.body.token
         if (!token) return response.status(400).send('no token')
         try {
             // verify
-            const result = jwt.verify(token, key)
+            const result = jwt.verify(token, accessTokenKey)
             request.user = result
             next()
         } catch (error) {
             console.log(error)
-            response.status(400).send(error.name ==='TokenExpiredError'?'Link expired':error.message)
+            response.status(400).send(error.name === 'TokenExpiredError' ? 'Link expired' : error.message)
         }
     },
     checkToken: (token) => {
         try {
-            jwt.verify(token, key)
+            jwt.verify(token, accessTokenKey)
             return 'success'
         } catch (error) {
             throw error
@@ -29,7 +48,7 @@ module.exports = {
         // console.log(request.headers.authorization)
         if (!token) return response.status(400).send('user not found')
         try {
-            const { id_user, username } = jwt.verify(token, key)
+            const { id_user, username } = jwt.verify(token, accessTokenKey)
             const query = 'select * from users where id_user=? and username=?'
             const [result] = await asyncQuery(query, [id_user, username])
             // console.log(result)

@@ -12,18 +12,19 @@ export default function Pending() {
     const [show, setShow] = useState(false)
     const [page, setPage] = useState(0)
     const [orderBy, setOrderBy] = useState('latest')
+    const [search, setSearch] = useState('')
 
     useEffect(() => {
         if (id_user) {
-            getHistory({ id_user, orderBy, id_order_status: 2,page,perPage }, data => setPendingProduct(data))
+            getHistory({ id_user, search, orderBy, id_order_status: 2,page,perPage }, data => setPendingProduct(data))
         }
-    }, [id_user, show, page, orderBy])
+    }, [id_user, search, show, page, orderBy])
     
-    if (!pendingProduct.length) return (
-        <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
-            <h2>Empty</h2>
-        </div>
-    )
+    // if (!pendingProduct.length) return (
+    //     <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
+    //         <h2>Empty</h2>
+    //     </div>
+    // )
 
     const handleSubmit = message => {
         const allData = { message, id_order: canceledIdOrder }
@@ -34,7 +35,7 @@ export default function Pending() {
     }
 
     return (
-        <PaginationComp page={page} perPage={perPage} setPage={setPage} length={pendingProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
+        <PaginationComp setSearch={setSearch} search={search} page={page} perPage={perPage} setPage={setPage} length={pendingProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 40px 40px 40px' }}>
                 {pendingProduct.map(

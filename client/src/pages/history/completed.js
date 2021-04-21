@@ -9,20 +9,22 @@ export default function Completed() {
     const { id_user } = useSelector(state => state.user)
     const [completedProduct, setCompletedProduct] = useState([])
     const [page, setPage] = useState(0)
-    const [orderBy, setOrderBy]=useState('latest')
+    const [orderBy, setOrderBy] = useState('latest')
+    const [search, setSearch] = useState('')
+
     useEffect(() => {
         if (id_user) {
-            getHistory({ id_user, id_order_status: 5, page, perPage, orderBy }, data => setCompletedProduct(data))
+            getHistory({ id_user, id_order_status: 5, search, page, perPage, orderBy }, data => setCompletedProduct(data))
         }
-    }, [id_user, page, orderBy ])
+    }, [id_user, search, page, orderBy ])
 
-    if (!completedProduct.length) return (
-        <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
-            <h2>Empty</h2>
-        </div>
-    )
+    // if (!completedProduct.length) return (
+    //     <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
+    //         <h2>Empty</h2>
+    //     </div>
+    // )
     return (
-        <PaginationComp page={page} perPage={perPage} setPage={setPage} length={completedProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
+        <PaginationComp setSearch={setSearch} search={search} page={page} perPage={perPage} setPage={setPage} length={completedProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 40px 40px 40px' }}>
                 {completedProduct.map((item, index) => <HistoryAccordion item={item} key={index} />)}
             </div>

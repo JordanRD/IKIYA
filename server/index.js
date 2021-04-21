@@ -14,7 +14,7 @@ db.connect(err => (
         console.log('connected to mysql => ' + db.threadId)
 ))
 
-const { userRouter, productRouter, cartRouter, orderRouter, historyRouter,adminRouter,wishlistRouter} = require('./routers')
+const { userRouter, productRouter, cartRouter, orderRouter, historyRouter,adminRouter,wishlistRouter,authRouter} = require('./routers')
 
 const {adminAuthorization,verifiedUserAuthorization,userAuthorization}=require('./helpers/jwtHelper')
 
@@ -28,6 +28,7 @@ app.use(express.static(__dirname + '/public'))
 app.use('/user', userRouter)
 app.use('/order', orderRouter)
 app.use('/product', productRouter)
+app.use('/auth', authRouter)
 
 app.use(userAuthorization)
 

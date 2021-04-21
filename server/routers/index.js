@@ -6,4 +6,5 @@ module.exports = {
     historyRouter:require('./historyRouter'),
     wishlistRouter:require('./wishlistRouter'),
     adminRouter:require('./adminRouter'),
+    authRouter:require('./authRouter'),
 };

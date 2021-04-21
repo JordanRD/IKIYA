@@ -1,18 +1,22 @@
 import api from '../httpService';
 
-export const login = ({userData,check}, action) => async (dispatch) => {
+export const login = ({ userData, check }, action) => async (dispatch) => {
     try {
         const { data: payload } = await api('/user').post('/login', userData)
         if (check) {
+            localStorage.setItem('refresh_token', payload.refresh_token)
             localStorage.setItem('token', payload.token)
         } else {
+            sessionStorage.setItem('refresh_token', payload.refresh_token)
             sessionStorage.setItem('token', payload.token)
         }
         delete payload.token
+        delete payload.refresh_token
         dispatch({ type: 'LOG_IN', payload })
+        // getAccessToken()
     } catch (error) {
         const message = error?.response?.data || error
-        console.log(message)
+        console.log(error.response)
         action(message)
     }
 }
@@ -27,9 +31,27 @@ export const keepLogin = () => async (dispatch) => {
         dispatch({ type: 'LOG_OUT' })
     }
 }
+
+export const getAccessToken = async (dispatch, username) => {
+    try {
+        const refresh_token = sessionStorage.refresh_token || localStorage.refresh_token
+        if (refresh_token) {
+            console.log('Updating token')
+            if (!refresh_token) return
+            const { data } = await api('/auth').post('/getAccessToken', {}, { headers: { refresh_token } })
+            console.log(data.token)
+            if (localStorage.token) localStorage.token = data.token
+            if (sessionStorage.token) sessionStorage.token = data.token
+            if (!username) dispatch(keepLogin())
+        }
+    } catch (error) {
+        dispatch(logout())
+    }
+}
+
 export const logout = () => ({ type: 'LOG_OUT' })
 
-export const checkToken = async (token,action) => {
+export const checkToken = async (token, action) => {
     try {
         await api('/user').post('/checkToken/' + token)
         action()
@@ -37,9 +59,9 @@ export const checkToken = async (token,action) => {
         const errorMsg = error?.response?.data
         const messages = {
             JsonWebTokenError: 'Invalid link',
-            TokenExpiredError:'Expired link'
+            TokenExpiredError: 'Expired link'
         }
-        action(messages[errorMsg]||'Some error occurred please try again later')
+        action(messages[errorMsg] || 'Some error occurred please try again later')
     }
 }
 
@@ -113,7 +135,7 @@ export const verifyUser = async (token, action) => {
 
 export const sendVerificationEmail = async (username, action) => {
     try {
-        const {data }=await api('/user').post('/resend',{username})
+        const { data } = await api('/user').post('/resend', { username })
         action(data)
     } catch (error) {
         const errorMessage = error?.response?.data || error

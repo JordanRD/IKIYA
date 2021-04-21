@@ -12,21 +12,22 @@ export default function Canceled() {
     const [show, setShow] = useState(false)
     const [message, setMessage] = useState('')
     const [page, setPage] = useState(0)
-    const [orderBy,setOrderBy]= useState('latest')
+    const [orderBy, setOrderBy] = useState('latest')
+    const [search, setSearch]=useState('')
     useEffect(() => {
         if (id_user) {
-            getHistory({ id_user, id_order_status: 6, page, perPage,orderBy }, data => setCanceledProduct(data))
+            getHistory({ id_user, id_order_status: 6, page, perPage,orderBy,search }, data => setCanceledProduct(data))
         }
-    }, [id_user, page,orderBy])
+    }, [id_user, page,orderBy,search])
 
-    if (!canceledProduct.length) return (
-        <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
-            <h2>Empty</h2>
-        </div>
-    )
+    // if (!canceledProduct.length) return (
+    //     <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
+    //         <h2>Empty</h2>
+    //     </div>
+    // )
 
     return (
-        <PaginationComp page={page} perPage={perPage} setPage={setPage} length={canceledProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
+        <PaginationComp page={page} setSearch={setSearch} search={search} perPage={perPage} setPage={setPage} length={canceledProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 40px 40px 40px' }}>
                 {canceledProduct.map(
                     (item, index) =>

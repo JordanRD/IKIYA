@@ -1,8 +1,8 @@
 
-import React, { useEffect,  } from 'react'
+import React, { useEffect, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Switch, Route, } from 'react-router'
-import { keepLogin } from './actions'
+import { getAccessToken, } from './actions'
 import Navigation from './components/navigation'
 import Home from './pages/home'
 import Login from './pages/login'
@@ -24,13 +24,24 @@ import Verification from './pages/verification'
 import Stock from './pages/stock'
 import WishList from './pages/wishlist'
 export default function App() {
-    const { username,id_role } = useSelector(state => state.user)
+    const { username, id_role } = useSelector(state => state.user)
     const dispatch = useDispatch()
-    useEffect(() => {
-        if (!username && (localStorage.token || sessionStorage.token)) {
-            dispatch(keepLogin())
-        }
+    const timeRef = useRef()
+    const refreshAccessToken = useCallback(() => {
+        getAccessToken(dispatch, username)
+        timeRef.current = setTimeout(() => {
+            refreshAccessToken()
+        }, 60000 * 2)
     }, [username, dispatch])
+
+    useEffect(() => {
+        if ((localStorage.refresh_token || sessionStorage.refresh_token)) {
+            refreshAccessToken()
+        }
+        return () => {
+            if (timeRef.current) clearTimeout(timeRef.current)
+        }
+    }, [refreshAccessToken])
 
 
 
@@ -40,10 +51,10 @@ export default function App() {
             <Switch>
                 <Route path='/' component={AdminHome} exact />
                 <Route path='/stock' component={Stock} />
-                <Route path='/edit/:id_product' component={EditProductPage}  />
+                <Route path='/edit/:id_product' component={EditProductPage} />
                 <Route path='/login' component={Login} />
                 <Route path='/orders' component={Orders} />
-                <Route path='/add' component={AddProductPage}/>
+                <Route path='/add' component={AddProductPage} />
                 <Route path='*' component={NotFound} />
             </Switch>
         </>
@@ -73,7 +84,7 @@ export default function App() {
             <Switch>
                 <Route path='/' component={Home} exact />
                 <Route path='/login' component={Login} />
-                <Route path='/verify/:token' component={Verification}/>
+                <Route path='/verify/:token' component={Verification} />
                 <Route path='/register' component={Register} />
                 <Route path='/detail/:id_product' component={ProductDetail} />
                 <Route path='/forgot/:token' component={ForgotPasswordPage} />

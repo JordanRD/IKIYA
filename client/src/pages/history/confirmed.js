@@ -11,21 +11,22 @@ export default function Confirmed() {
     const [paymentImage, setPaymentImage] = useState('')
     const [page, setPage] = useState(0)
     const [orderBy, setOrderBy] = useState('latest')
+    const [search, setSearch] = useState('')
 
     useEffect(() => {
         if (id_user) {
-            getHistory({ id_user, id_order_status: 3, page, perPage, orderBy }, data => setConfirmedProduct(data))
+            getHistory({ id_user, search,id_order_status: 3, page, perPage, orderBy }, data => setConfirmedProduct(data))
         }
-    }, [id_user, page, orderBy])
+    }, [id_user, search, page, orderBy])
 
-    if (!confirmedProduct.length) return (
-        <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
-            <h2>Empty</h2>
-        </div>
-    )
+    // if (!confirmedProduct.length) return (
+    //     <div style={{ display: 'grid', placeItems: 'center', height: '40vh' }}>
+    //         <h2>Empty</h2>
+    //     </div>
+    // )
 
     return (
-        <PaginationComp page={page} perPage={perPage} setPage={setPage} length={confirmedProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
+        <PaginationComp page={page} setSearch={setSearch} search={search} perPage={perPage} setPage={setPage} length={confirmedProduct.length} setOrderBy={setOrderBy} orderBy={orderBy} >
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 40px 40px 40px' }}>
             {confirmedProduct.map((item, index) => <HistoryAccordion showModal={setPaymentImage} item={item} key={index} />)}

@@ -1,12 +1,14 @@
 const { asyncQuery } = require('../helpers/queryHelper')
 
 module.exports = {
-    getHistory: async ({ query: { id_user, id_order_status, page = 0, perPage = 5,orderBy } }, res) => {
+    getHistory: async ({ query: { id_user, id_order_status, page = 0, perPage = 5,orderBy,search } }, res) => {
         // console.log({ id_user, id_order_status, page , perPage  } )
         const orderByOption = {
             latest: 'o.date DESC',
             oldest: 'o.date ASC',
         }
+        if (search) search = `and o.id_order regexp '${search}'`
+        else search=''
         try {
             const query = `
                         SELECT
@@ -14,7 +16,7 @@ module.exports = {
                         FROM
                             (select * from orders o
                         WHERE
-                            o.id_user = ? and o.id_order_status =?
+                            o.id_user = ? and o.id_order_status =? ${search}
                             ORDER BY ${orderByOption[orderBy] || orderByOption.latest}
                             LIMIT ${page * perPage},${perPage}
                             ) o

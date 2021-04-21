@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 const transporter = require('../helpers/nodemailerHelper')
 const fs = require('fs')
 const handlebars = require('handlebars')
-const { createToken, checkToken} = require('../helpers/jwtHelper')
+const { createToken, checkToken,createRefreshToken} = require('../helpers/jwtHelper')
 
 
 const cartQuery = `SELECT
@@ -64,6 +64,7 @@ module.exports = {
 
     login: async ({ body }, res) => {
         try {
+            // console.log(ress)
             const { username, password } = hash(body)
             const query = [
                 'select id_user,username,id_status,id_role,email,profile_picture from users where password=? and (username=? or email=?)',
@@ -79,8 +80,10 @@ module.exports = {
             const cart = await asyncQuery(cartQuery, [result1.id_user])
             const wishlist = await asyncQuery(getWishlist, [result1.id_user])
             const token = createToken({ id_user: result1.id_user, username: result1.username })
-
-            res.status(200).send({ ...result1, address: result2, token, cart, wishlist })
+            // console.log(token)
+            const refresh_token = createRefreshToken({ id_user: result1.id_user, username: result1.username })
+            // console.log(refresh_token)
+            res.status(200).send({ ...result1, address: result2, token, cart, wishlist, refresh_token })
         } catch (error) {
             res.status(400).send(error.message || error.sqlMessage || error)
         }
@@ -226,7 +229,7 @@ module.exports = {
 
             const file = fs.readFileSync('./templates/userVerification.handlebars').toString()
             const template = handlebars.compile(file)
-            const token = createToken({ username, password })
+            const token = createToken({ username, password },'15m')
             option.html = template({ username, password, link: 'http://localhost:3000/verify/' + token })
             transporter.sendMail(option);
             res.status(200).send('Register success! We have sent a verification message please check your email')
