@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 const transporter = require('../helpers/nodemailerHelper')
 const fs = require('fs')
 const handlebars = require('handlebars')
-const { createToken, checkToken,createRefreshToken} = require('../helpers/jwtHelper')
+const { createToken, checkToken, createRefreshToken } = require('../helpers/jwtHelper')
 
 
 const cartQuery = `SELECT
@@ -67,7 +67,7 @@ module.exports = {
             // console.log(ress)
             const { username, password } = hash(body)
             const query = [
-                'select id_user,username,id_status,id_role,email,profile_picture from users where password=? and (username=? or email=?)',
+                'select id_user,username,id_status,id_role,email,profile_picture,id_active_status from users where password=? and (username=? or email=?)',
                 'select * from address where id_user=?',
             ]
 
@@ -75,7 +75,7 @@ module.exports = {
             const [result1] = await asyncQuery(query[0], [password, username, username])
 
             if (!result1) return res.status(400).send('wrong username or password')
-
+            if (result1.id_active_status !== 1) return res.status(400).send('account is not-active')
             const result2 = await asyncQuery(query[1], [result1.id_user])
             const cart = await asyncQuery(cartQuery, [result1.id_user])
             const wishlist = await asyncQuery(getWishlist, [result1.id_user])
@@ -92,7 +92,7 @@ module.exports = {
         try {
             // console.log(user)
             const query = [
-                'select id_user,username,id_status,id_role,email,profile_picture from users where id_user=? and username=? ',
+                'select id_user,username,id_status,id_role,email,profile_picture,id_active_status from users where id_user=? and username=? ',
                 'select * from address where id_user=?',
                 'select * from wishlists w join products p on p.id_product=w.id_product join (select * from product_images group by id_product) pi on pi.id_product=w.id_product where id_user=? '
             ]
@@ -100,11 +100,12 @@ module.exports = {
             const [result1] = await asyncQuery(query[0], [user.id_user, user.username])
             // console.log(result1)
             if (!result1) return res.status(400).send('user not found')
+            if (result1.id_active_status !== 1) return res.status(400).send('account is not-active')
             const address = await asyncQuery(query[1], [user.id_user])
             const cart = await asyncQuery(cartQuery, [user.id_user])
-            const wishlist = await asyncQuery(getWishlist,[user.id_user])
+            const wishlist = await asyncQuery(getWishlist, [user.id_user])
             // console.log(address)
-            res.status(200).send({ ...result1, address, cart,wishlist })
+            res.status(200).send({ ...result1, address, cart, wishlist })
         } catch (error) {
             res.status(400).send(error.message || error.sqlMessage || error)
         }
@@ -135,7 +136,7 @@ module.exports = {
 
             console.log(code, matchPassword)
 
-            const token = createToken({ username, password: matchPassword },'5m')
+            const token = createToken({ username, password: matchPassword }, '5m')
             option.html = template({ username, code, link: `http://localhost:3000/forgot/${token}` })
 
             transporter.sendMail(option)
@@ -229,7 +230,7 @@ module.exports = {
 
             const file = fs.readFileSync('./templates/userVerification.handlebars').toString()
             const template = handlebars.compile(file)
-            const token = createToken({ username, password },'15m')
+            const token = createToken({ username, password }, '15m')
             option.html = template({ username, password, link: 'http://localhost:3000/verify/' + token })
             transporter.sendMail(option);
             res.status(200).send('Register success! We have sent a verification message please check your email')
@@ -257,7 +258,7 @@ module.exports = {
             }
             const file = fs.readFileSync('./templates/userVerification.handlebars').toString()
             const template = handlebars.compile(file)
-            const token = createToken({ username, password },'15m')
+            const token = createToken({ username, password }, '15m')
             option.html = template({ username, password, link: 'http://localhost:3000/verify/' + token })
             transporter.sendMail(option);
             res.status(200).send('We have sent an email verification please check your email')
@@ -270,7 +271,7 @@ module.exports = {
             const query = 'update users set profile_picture=? where id_user=?'
             console.log(file)
             res.status(200).send('success')
-            await asyncQuery(query, [`images/users/${file.filename}`,body.id_user])
+            await asyncQuery(query, [`images/users/${file.filename}`, body.id_user])
         } catch (error) {
             res.status(200).send(error.message || error.sqlMessage || error);
         }
@@ -290,6 +291,15 @@ module.exports = {
             res.status(200).send('success')
         } catch (error) {
             res.status(400).send(error.name)
+        }
+    },
+    deactivateAccount: async (req, res) => {
+        try {
+            const query='update users set id_active_status=2 where id_user=?'
+            await asyncQuery(query,[req.user.id_user])
+            res.status(200).send('success')
+        } catch (error) {
+            res.status(400).send('failed')
         }
     }
 }

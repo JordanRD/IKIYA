@@ -1,5 +1,6 @@
 const { asyncQuery } = require('../helpers/queryHelper')
 
+
 module.exports = {
     getAllProduct: async (req, res) => {
         try {
@@ -167,14 +168,14 @@ module.exports = {
             res.status(400).send(error.message || error.sqlMessage || error)
         }
     },
-    getAllOrder: async ({ params: { id_order_status }, query: { page = 0, perPage = 5, orderBy,search } }, res) => {
+    getAllOrder: async ({ params: { id_order_status }, query: { page = 0, perPage = 5, orderBy, search } }, res) => {
         try {
             const orderByOption = {
                 latest: 'o.date DESC',
                 oldest: 'o.date ASC',
             }
             let bySearch = ''
-            if(search)bySearch=` where o.id_order regexp '${search}' or u.username regexp'${search}' `
+            if (search) bySearch = ` where o.id_order regexp '${search}' or u.username regexp'${search}' `
             const query = `
                         SELECT
                             *
@@ -384,11 +385,11 @@ module.exports = {
         }
     },
     addStore: async (req, res) => {
-        const {lat,lng,store_name}=req.body
+        const { lat, lng, store_name } = req.body
         try {
             console.log(req.body)
             const query = `insert into stores (name,lat,lng) values(?,?,?)`
-            const resu=await asyncQuery(query, [store_name, lat, lng])
+            const resu = await asyncQuery(query, [store_name, lat, lng])
             console.log(resu)
             res.status(200).send('success')
         } catch (error) {
@@ -399,7 +400,7 @@ module.exports = {
     deleteStore: async (req, res) => {
         try {
             const query = [
-            `SELECT
+                `SELECT
                 total - stock total, s.id_product,purchased_stock
             FROM
                 storages s
@@ -412,7 +413,7 @@ module.exports = {
             WHERE
                 id_store = ?
             HAVING total < 0 or purchased_stock>0`,
-            'delete from stores where id_store=?'
+                'delete from stores where id_store=?'
             ]
             const isItSaveToDelete = await asyncQuery(query[0], [req.params.id_store])
             if (isItSaveToDelete.length) return res.status(400).send('Can not delete store because some order need stock from selected store')
@@ -420,6 +421,35 @@ module.exports = {
             res.status(200).send('success')
         } catch (error) {
             res.status(400).send('delete store failed')
+        }
+    },
+    getAllUsers: async (req, res) => {
+        const { search, page = 0, perPage = 20, orderBy = 'active' } = req.query
+        try {
+            const setOrderBy = {
+                active: 'order by id_active_status asc',
+                notActive: 'order by id_active_status desc'
+            }
+            let bySearch = ''
+            if (search) bySearch = `where username regexp '${search}' or email regexp '${search}'`
+            const query = `select id_user,username,email,id_role,id_status,id_active_status,profile_picture from users ${bySearch} ${setOrderBy[orderBy]} limit ${page * perPage},${perPage}`
+            const result = await asyncQuery(query)
+            res.status(200).send(result)
+        } catch (error) {
+            console.log(error)
+            res.status(400).send('something wrong')
+        }
+    },
+    editUser: async (req, res) => {
+        try {
+            const { id_user, id_role, id_active_status } = req.body;
+            const query = 'update users set id_role=?,id_active_status=? where id_user=?'
+            // const [user] = await asyncQuery(query[0], [id_user])
+            await asyncQuery(query,[ id_role, id_active_status, id_user])
+            res.status(200).send('success')
+        } catch (error) {
+            console.log(error)
+            res.status(400).send('update failed')
         }
     }
 }

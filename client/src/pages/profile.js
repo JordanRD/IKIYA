@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Badge, Button, ButtonGroup, Form, OverlayTrigger, Popover, } from 'react-bootstrap'
-import { postAddress, keepLogin, deleteAddress, sendVerificationEmail, editAddress, uploadProfilePicture, deleteProfilePicture } from "../actions";
+import { postAddress,deactivateUser, keepLogin,logout, deleteAddress, sendVerificationEmail, editAddress, uploadProfilePicture, deleteProfilePicture } from "../actions";
 import AlertModal from '../components/alertModal'
 import Maps from '../components/maps'
 import { Redirect } from 'react-router';
 import noProfile from '../assets/no-profile.png'
 import AddressCard from '../components/addressCard';
+import ConfirmationModal from '../components/confirmationModal';
 export default function Profile() {
     const { username, address, email, id_user, id_status, profile_picture } = useSelector(state => state.user)
     const [errorMessage, setErrorMessage] = useState('')
@@ -16,6 +17,7 @@ export default function Profile() {
     const [cordinates, setCordinates] = useState({ city: '', postal_code: null })
     const [newAddressDetail, setNewAddressDetail] = useState('')
     const [alertMessage, setAlertMessage] = useState('')
+    const [showConfirm, setShowConfirm] = useState(false)
     const fileRef = useRef()
     const dispatch = useDispatch()
     const handleChange = ({ target: { name, value } }) => {
@@ -33,7 +35,8 @@ export default function Profile() {
         deleteAddress(id_address, err => {
             if (err) return alert(err)
             handleCancel()
-            dispatch(keepLogin())
+            
+
         })
     }
 
@@ -69,6 +72,13 @@ export default function Profile() {
         editAddress({ id_address, address_detail: newAddressDetail, id_user }, err => {
             if (err) return setAlertMessage(err)
             dispatch(keepLogin())
+        })
+    }
+
+    const handleDeactivateAccount = () => {
+        deactivateUser(err => {
+            if(err) return setAlertMessage('Failed to deactivate please try again later')
+            dispatch(logout())
         })
     }
 
@@ -117,6 +127,7 @@ export default function Profile() {
                         <h4 style={{ fontWeight: '400' }}>username</h4>
                         <p>{username}</p>
                     </div>
+                    <Button onClick={()=>setShowConfirm(true)} variant='danger'>Deactivate Account</Button>
                 </div>
                 <div style={{ display: 'grid', rowGap: '20px' }}>
                     <h2>Address</h2>
@@ -172,6 +183,10 @@ export default function Profile() {
             </div>
             <AlertModal message={alertMessage} setShow={() => setAlertMessage('')} />
             <Maps show={show} setShow={() => setShow(false)} setUserCordinates={setCordinates} />
+            <ConfirmationModal show={showConfirm} setShow={() => setShowConfirm(false)} handleSubmit={() => {
+                setShowConfirm(false)
+                handleDeactivateAccount()
+            }} message='Are you sure you want to deactivate this account?' />
         </div>
     )
 }

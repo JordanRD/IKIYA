@@ -24,6 +24,7 @@ export default function AdminNavigation() {
                 <Nav className="mr-auto">
                     <Nav.Link style={{color:'white'}} as={Link} to='/orders/confirmed' >Orders</Nav.Link>
                     <Nav.Link style={{color:'white'}} as={Link} to='/stock/add' >Stock</Nav.Link>
+                    <Nav.Link style={{color:'white'}} as={Link} to='/users' >Users</Nav.Link>
                 </Nav>
                 <Form inline style={{ display: 'flex', justifyContent: 'space-between', minWidth: '150px', backgroundColor: 'white', borderRadius: '5px',height:'45px', alignItems: 'center' }}>
                     <MyDropdown title={username || "admin"}  id="basic-nav-dropdown">

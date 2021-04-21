@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button, Modal, } from 'react-bootstrap'
 
-export default function ConfirmationModal({ show, handleSubmit, setShow,message, title }) {
+export default function ConfirmationModal({ show, handleSubmit, setShow,message, title='confirmation' }) {
 
     return (
         <Modal
@@ -18,8 +18,8 @@ export default function ConfirmationModal({ show, handleSubmit, setShow,message,
                 {message}
             </Modal.Body>
             <Modal.Footer>
-                <Button variant='success' onClick={handleSubmit}>Submit</Button>
-                <Button variant='danger' onClick={setShow}>Cancel</Button>
+                <Button variant='success' onClick={handleSubmit}>Yes</Button>
+                <Button variant='danger' onClick={setShow}>No</Button>
             </Modal.Footer>
         </Modal>
     )

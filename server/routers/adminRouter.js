@@ -21,7 +21,9 @@ const {
     storeDetails,
     storeProductDetails,
     addStore,
-    deleteStore
+    deleteStore,
+    getAllUsers,
+    editUser
 } = require('../controllers').adminController
 
 const { uploadProductImages } = require('../helpers/multerHelper')
@@ -33,6 +35,7 @@ router.get('/orders/:id_order_status', getAllOrder)
 router.get('/storeDetails',storeDetails)
 router.get('/getStock', getStockData)
 router.get('/stores', getStores)
+router.get('/users', getAllUsers)
 
 router.post('/editProduct', uploadProductImages(), editProduct)
 router.post('/addProduct', uploadProductImages(), addProduct)
@@ -45,6 +48,7 @@ router.patch('/restoreProduct/:id_product', restoreProduct)
 router.patch('/editCategory',editCategory)
 router.patch('/editStock', editStockData)
 router.patch('/moveStock', moveStock)
+router.patch('/editUser', editUser)
 
 router.delete('/deleteCategory/:id_category', deleteCategory)
 router.delete('/deleteProduct/:id_product', deleteProduct)

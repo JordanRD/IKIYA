@@ -23,6 +23,7 @@ import AddProductPage from './pages/addProductPage'
 import Verification from './pages/verification'
 import Stock from './pages/stock'
 import WishList from './pages/wishlist'
+import Users from './pages/users'
 export default function App() {
     const { username, id_role } = useSelector(state => state.user)
     const dispatch = useDispatch()
@@ -55,6 +56,7 @@ export default function App() {
                 <Route path='/login' component={Login} />
                 <Route path='/orders' component={Orders} />
                 <Route path='/add' component={AddProductPage} />
+                <Route path='/users' component={Users} />
                 <Route path='*' component={NotFound} />
             </Switch>
         </>

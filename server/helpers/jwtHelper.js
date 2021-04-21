@@ -9,14 +9,14 @@ module.exports = {
         try {
             console.log(req.headers)
             const { id_user, username } = jwt.verify(req.headers['refresh_token'], refreshTokenKey)
-            console.log(id_user,username)
+            console.log(id_user, username)
             const query = 'select id_user,username from users where id_user=? and username=?'
             const [result] = await asyncQuery(query, [id_user, username])
             console.log(result)
             if (!result) return res.status(401).send('Invalid token')
-            const accessToken = jwt.sign({id_user:result.id_user, username:result.username}, accessTokenKey, { expiresIn: '3m' })
+            const accessToken = jwt.sign({ id_user: result.id_user, username: result.username }, accessTokenKey, { expiresIn: '3m' })
             console.log(accessToken)
-            res.status(200).send({ token: accessToken})
+            res.status(200).send({ token: accessToken })
         } catch (error) {
             console.log(error)
             res.status(401).send(error.name === 'TokenExpiredError' ? 'Link expired' : error.message)
@@ -49,8 +49,10 @@ module.exports = {
         if (!token) return response.status(400).send('user not found')
         try {
             const { id_user, username } = jwt.verify(token, accessTokenKey)
-            const query = 'select * from users where id_user=? and username=?'
+            const query = 'select * from users where id_user=? and username=? '
             const [result] = await asyncQuery(query, [id_user, username])
+            if (!result) return response.status(400).sendd('user not found')
+            if (result.id_active_status !== 1) return response.status(400).sendd('account is not active')
             // console.log(result)
             request.user = result
             next()

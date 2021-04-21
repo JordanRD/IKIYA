@@ -178,3 +178,14 @@ export const deleteProfilePicture = async (id_user, action) => {
         action()
     }
 }
+
+export const deactivateUser = async (action) => {
+    try {
+        await api('/user').patch('/deactivate')
+        action()
+    } catch (error) {
+        const errorMessage = error?.response?.data || error
+        console.log(errorMessage)
+        action(true)
+    }
+}
