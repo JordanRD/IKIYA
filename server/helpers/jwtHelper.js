@@ -5,13 +5,20 @@ const refreshTokenKey = 'key'
 module.exports = {
     createToken: (data, expiresIn = '3m') => jwt.sign(data, accessTokenKey, { expiresIn }),
     createRefreshToken: (data, expiresIn = '7d') => jwt.sign(data, refreshTokenKey, { expiresIn }),
+    verifyRefreshToken: (token) => jwt.verify(token, refreshTokenKey),
     getAccessToken: async (req, res) => {
         try {
+            const refresh_token = req.headers['refresh_token']
             console.log(req.headers)
-            const { id_user, username } = jwt.verify(req.headers['refresh_token'], refreshTokenKey)
+            const { id_user, username } = jwt.verify(refresh_token, refreshTokenKey)
             console.log(id_user, username)
-            const query = 'select id_user,username from users where id_user=? and username=?'
-            const [result] = await asyncQuery(query, [id_user, username])
+            const query = [
+                'select * from active_tokens where id_user=? and refresh_token=?',
+                'select id_user,username from users where id_user=? and username=? and id_active_status=1',
+            ]
+            const [checkToken] = await asyncQuery(query[0], [id_user, refresh_token])
+            if (!checkToken) return res.status(400).send('refresh token expired')
+            const [result] = await asyncQuery(query[1], [id_user, username])
             console.log(result)
             if (!result) return res.status(401).send('Invalid token')
             const accessToken = jwt.sign({ id_user: result.id_user, username: result.username }, accessTokenKey, { expiresIn: '3m' })
@@ -51,8 +58,8 @@ module.exports = {
             const { id_user, username } = jwt.verify(token, accessTokenKey)
             const query = 'select * from users where id_user=? and username=? '
             const [result] = await asyncQuery(query, [id_user, username])
-            if (!result) return response.status(400).sendd('user not found')
-            if (result.id_active_status !== 1) return response.status(400).sendd('account is not active')
+            if (!result) return response.status(400).send('user not found')
+            if (result.id_active_status !== 1) return response.status(400).send('account is not active')
             // console.log(result)
             request.user = result
             next()

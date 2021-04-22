@@ -49,7 +49,18 @@ export const getAccessToken = async (dispatch, username) => {
     }
 }
 
-export const logout = () => ({ type: 'LOG_OUT' })
+export const logout = () => async (dispatch) => {
+    try {
+        const refresh_token = sessionStorage.refresh_token || localStorage.refresh_token
+        if (refresh_token) {
+            await api('/user').delete('/logout', {}, { headers: { refresh_token } })
+        }
+    } catch (error) {
+        console.log(error?.response?.data || error)
+    } finally {
+        dispatch({ type: 'LOG_OUT' })
+    }
+}
 
 export const checkToken = async (token, action) => {
     try {
@@ -124,7 +135,22 @@ export const registerUser = async (userData, action) => {
 
 export const verifyUser = async (token, action) => {
     try {
+        console.log(token)
         await api('/user').patch('/verify', { token })
+        console.log(token)
+        action()
+    } catch (error) {
+        const errorMessage = error?.response?.data || error
+        console.log(errorMessage)
+        action(errorMessage)
+    }
+}
+
+export const changePassword = async (data, action) => {
+        try {
+        // console.log(token)
+            await api('/user').patch('/changePassword', data)
+        // console.log(token)
         action()
     } catch (error) {
         const errorMessage = error?.response?.data || error
@@ -187,5 +213,16 @@ export const deactivateUser = async (action) => {
         const errorMessage = error?.response?.data || error
         console.log(errorMessage)
         action(true)
+    }
+}
+
+export const changeEmail = async(email,action)=>{
+    try {
+        await api('/user').patch('/changeEmail',{email})
+        action()
+    } catch (error) {
+        const errorMessage = error?.response?.data || error
+        console.log(errorMessage)
+        action(errorMessage)
     }
 }

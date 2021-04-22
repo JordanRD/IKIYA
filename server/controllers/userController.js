@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 const transporter = require('../helpers/nodemailerHelper')
 const fs = require('fs')
 const handlebars = require('handlebars')
-const { createToken, checkToken, createRefreshToken } = require('../helpers/jwtHelper')
+const { createToken, checkToken, createRefreshToken, verifyRefreshToken } = require('../helpers/jwtHelper')
 
 
 const cartQuery = `SELECT
@@ -69,12 +69,24 @@ module.exports = {
             const query = [
                 'select id_user,username,id_status,id_role,email,profile_picture,id_active_status from users where password=? and (username=? or email=?)',
                 'select * from address where id_user=?',
+                'update active_tokens set refresh_token=? where id_user=?'
             ]
 
             console.log(password)
             const [result1] = await asyncQuery(query[0], [password, username, username])
 
             if (!result1) return res.status(400).send('wrong username or password')
+            const option = {
+                from: 'Ikiya <ikiya@gmail.com>',
+                to: result1.email,
+                subject: 'New Login IKIYA',
+            }
+
+            const file = fs.readFileSync('./templates/loginInfo.handlebars').toString()
+            const template = handlebars.compile(file)
+            option.html = template({ username:result1.username })
+            transporter.sendMail(option)
+
             if (result1.id_active_status !== 1) return res.status(400).send('account is not-active')
             const result2 = await asyncQuery(query[1], [result1.id_user])
             const cart = await asyncQuery(cartQuery, [result1.id_user])
@@ -83,6 +95,7 @@ module.exports = {
             // console.log(token)
             const refresh_token = createRefreshToken({ id_user: result1.id_user, username: result1.username })
             // console.log(refresh_token)
+            await asyncQuery(query[2], [refresh_token, result1.id_user])
             res.status(200).send({ ...result1, address: result2, token, cart, wishlist, refresh_token })
         } catch (error) {
             res.status(400).send(error.message || error.sqlMessage || error)
@@ -108,6 +121,53 @@ module.exports = {
             res.status(200).send({ ...result1, address, cart, wishlist })
         } catch (error) {
             res.status(400).send(error.message || error.sqlMessage || error)
+        }
+    },
+    logout: async (req, res) => {
+        try {
+            const refresh_token = req.headers['refresh_token']
+            const user = verifyRefreshToken(refresh_token)
+            const query = [
+                'select * from active_tokens where id_user=? and refresh_token=?',
+                'update active_tokens set refresh_token=null where id_user=?'
+            ]
+            const [checkToken] = await asyncQuery(query[0], [user.id_user, refresh_token])
+            if (!checkToken) return response.status(400).send('refresh token not found')
+            await asyncQuery(query[1], [checkToken.id_user])
+            res.status(200).send('success')
+        } catch (error) {
+            res.status(400).send(error.message || error.sqlMessage || error)
+        }
+    },
+    changePassword: async (req, res) => {
+        const isValid = validationResult(req)
+        try {
+            const [oldPassword, newPassword] = hash([{ password: req.body.oldPassword }, { password: req.body.password }])
+            console.log(req.body)
+            console.log(oldPassword, newPassword,req.user.password)
+            if (oldPassword.password !== req.user.password) return res.status(400).send('Wrong password')
+
+            if (!isValid.isEmpty()) return res.status(400).send(isValid.array().map(i => i.msg).join(', '))
+
+            const query = 'update users set password=? where id_user=?'
+            await asyncQuery(query, [newPassword.password, req.user.id_user])
+            res.status(200).send('success')
+        } catch (error) {
+            res.status(400).send(error.message || error.sqlMessage || error)
+        }
+    },
+    changeEmail: async (req, res) => {
+        const isValid = validationResult(req)
+        try {
+            if (!isValid.isEmpty()) return res.status(400).send(isValid.array().map(i => i.msg).join(', '))
+
+            const { email } = req.body
+            
+            const query = 'update users set email=?,id_status=1 where id_user=?'
+            await asyncQuery(query, [email, req.user.id_user])
+            res.status(200).send('success')
+        } catch (error) {
+            res.status(400).send(error.message || error.sqlMessage || 'something wrong in our server please try again later')
         }
     },
     forgotPassword: async (req, res) => {
@@ -216,12 +276,14 @@ module.exports = {
             const query = [
                 'select * from users where username =?',
                 'insert into users (username,email,password,id_role,id_status) values (?)',
-                'select id_user,username,id_status,id_role,email from users where username =?'
+                'select id_user,username,id_status,id_role,email from users where username =?',
+                'insert into active_tokens (id_user) values (?)'
             ]
             const [result1] = await asyncQuery(query[0], [username])
             if (result1) return res.status(400).send('Username is taken')
             const result2 = await asyncQuery(query[1], [[username, email, password, 1, 1]])
             if (!result2.insertId) return res.status(400).send('something wrong in our server please try again later')
+            await asyncQuery(query[3], [result2.insertId])
             const option = {
                 from: 'Ikiya <ikiya@gmail.com>',
                 to: email,
@@ -295,8 +357,8 @@ module.exports = {
     },
     deactivateAccount: async (req, res) => {
         try {
-            const query='update users set id_active_status=2 where id_user=?'
-            await asyncQuery(query,[req.user.id_user])
+            const query = 'update users set id_active_status=2 where id_user=?'
+            await asyncQuery(query, [req.user.id_user])
             res.status(200).send('success')
         } catch (error) {
             res.status(400).send('failed')

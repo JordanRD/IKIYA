@@ -1,13 +1,27 @@
 import React, { useState, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Badge, Button, ButtonGroup, Form, OverlayTrigger, Popover, } from 'react-bootstrap'
-import { postAddress,deactivateUser, keepLogin,logout, deleteAddress, sendVerificationEmail, editAddress, uploadProfilePicture, deleteProfilePicture } from "../actions";
+import {
+    postAddress,
+    changeEmail,
+    deactivateUser,
+    keepLogin,
+    logout,
+    deleteAddress,
+    sendVerificationEmail,
+    changePassword,
+    editAddress,
+    uploadProfilePicture,
+    deleteProfilePicture
+} from "../actions";
 import AlertModal from '../components/alertModal'
 import Maps from '../components/maps'
 import { Redirect } from 'react-router';
 import noProfile from '../assets/no-profile.png'
 import AddressCard from '../components/addressCard';
 import ConfirmationModal from '../components/confirmationModal';
+import ChangePasswordModal from '../components/changePasswordModal';
+const INITIAL = { oldPassword: '', password: '', confirmPassword: '' }
 export default function Profile() {
     const { username, address, email, id_user, id_status, profile_picture } = useSelector(state => state.user)
     const [errorMessage, setErrorMessage] = useState('')
@@ -18,6 +32,11 @@ export default function Profile() {
     const [newAddressDetail, setNewAddressDetail] = useState('')
     const [alertMessage, setAlertMessage] = useState('')
     const [showConfirm, setShowConfirm] = useState(false)
+    const [editEmail, setEditEmail] = useState(false)
+    const [editPassword, setEditPassword] = useState(false)
+    const [passwordData, setPasswordData] = useState(INITIAL)
+    const [passwordMessage, setPasswordMessage] = useState('')
+    const [newEmail, setNewEmail] = useState('')
     const fileRef = useRef()
     const dispatch = useDispatch()
     const handleChange = ({ target: { name, value } }) => {
@@ -35,7 +54,7 @@ export default function Profile() {
         deleteAddress(id_address, err => {
             if (err) return alert(err)
             handleCancel()
-            
+
 
         })
     }
@@ -77,8 +96,30 @@ export default function Profile() {
 
     const handleDeactivateAccount = () => {
         deactivateUser(err => {
-            if(err) return setAlertMessage('Failed to deactivate please try again later')
+            if (err) return setAlertMessage('Failed to deactivate please try again later')
             dispatch(logout())
+        })
+    }
+
+    const handleSaveEmail = () => {
+        if (!newEmail) return setAlertMessage('input can not be empty')
+        if (newEmail === email) return setEditEmail(false)
+        changeEmail(newEmail, err => {
+            if (err) return setAlertMessage(err)
+            setEditEmail(false)
+            dispatch(keepLogin())
+        })
+    }
+
+    const handleSavePassword = () => {
+        const { password, oldPassword, confirmPassword } = passwordData;
+        if (!password || !oldPassword || !confirmPassword) return setPasswordMessage('Input can not be empty')
+        if (confirmPassword !== password) return setPasswordMessage('Password and Confirm password do not match')
+        changePassword({ password, oldPassword }, err => {
+            if (err) return setPasswordMessage(err)
+            setEditPassword(false)
+            setAlertMessage('Edit password success')
+            setPasswordData(INITIAL)
         })
     }
 
@@ -111,23 +152,42 @@ export default function Profile() {
                         <input ref={fileRef} type='file' accept='image/*' onChange={handleProfPict} style={{ display: 'none', pointerEvents: 'none' }} />
                     </div>
                     <div style={{ height: '90px', border: '1px solid #1a242a', boxShadow: '0 0 2px 1px black', borderRadius: '3px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                            <h4 style={{ fontWeight: '400' }}>email</h4>
-                            <p>{email}</p>
-                        </div>
-                        {id_status === 2 ?
-                            <Badge variant='success'>verified</Badge>
-                            :
-                            <OverlayTrigger trigger={["hover", "focus"]} delay={{ hide: 3000 }} placement="right" overlay={popover}>
-                                <Badge style={{ cursor: 'pointer' }} variant='danger'> not-verified</Badge>
-                            </OverlayTrigger>
+                        {
+                            editEmail ?
+                                <>
+                                    <Form.Control value={newEmail} onChange={e => setNewEmail(e.target.value)} style={{ marginRight: '20px' }} placeholder='enter email' />
+                                    <ButtonGroup vertical>
+                                        <Button onClick={() => setEditEmail(false)} variant='danger' size='sm'>cancel</Button>
+                                        <Button variant='success' onClick={handleSaveEmail} size='sm'>Save</Button>
+                                    </ButtonGroup>
+                                </> :
+                                <>
+                                    <div style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                        <h4 style={{ fontWeight: '400' }}>email</h4>
+                                        <p>{email}</p>
+                                    </div>
+                                    {id_status === 2 ?
+                                        <Badge variant='success'>verified</Badge>
+                                        :
+                                        <OverlayTrigger trigger={["hover", "focus"]} delay={{ hide: 3000 }} placement="right" overlay={popover}>
+                                            <Badge style={{ cursor: 'pointer' }} variant='danger'> not-verified</Badge>
+                                        </OverlayTrigger>
+                                    }
+                                    <Button variant='success' size='sm' onClick={() => {
+                                        setNewEmail(email)
+                                        setEditEmail(true)
+                                    }}>Edit</Button>
+                                </>
                         }
                     </div>
                     <div style={{ height: '90px', border: '1px solid #1a242a', boxShadow: '0 0 2px 1px black', borderRadius: '3px', padding: '0 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                         <h4 style={{ fontWeight: '400' }}>username</h4>
                         <p>{username}</p>
                     </div>
-                    <Button onClick={()=>setShowConfirm(true)} variant='danger'>Deactivate Account</Button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Button onClick={() => setEditPassword(true)} variant='secondary'>Change Password</Button>
+                        <Button onClick={() => setShowConfirm(true)} variant='danger'>Deactivate Account</Button>
+                    </div>
                 </div>
                 <div style={{ display: 'grid', rowGap: '20px' }}>
                     <h2>Address</h2>
@@ -187,6 +247,10 @@ export default function Profile() {
                 setShowConfirm(false)
                 handleDeactivateAccount()
             }} message='Are you sure you want to deactivate this account?' />
+            <ChangePasswordModal show={editPassword} setShow={() => {
+                setEditPassword(false)
+                setPasswordData(INITIAL)
+            }} handleChange={setPasswordData} value={passwordData} handleSave={handleSavePassword} message={passwordMessage} />
         </div>
     )
 }

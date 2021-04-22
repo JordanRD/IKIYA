@@ -9,11 +9,12 @@ export default function Verification() {
     const { id_status, username } = useSelector(state => state.user)
     const history = useHistory()
     const [modalMessage, setModalMessage] = useState('')
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
     const dispatch = useDispatch()
     useEffect(() => {
-        if (id_status) {
+        setLoading(true)
+        // if (id_status) {
             if (+id_status === 2) return history.replace('/')
             verifyUser(token, err => {
                 setLoading(false)
@@ -25,7 +26,7 @@ export default function Verification() {
                 setModalMessage('You are now verified')
                 setIsSuccess(true)
             })
-        }
+        // }
     }, [history, token, id_status])
 
     const handleClose = () => {
